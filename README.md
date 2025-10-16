@@ -1,144 +1,126 @@
-# Acquiring Partner Management Tool
+# Background
 
-A comprehensive CRM-style project management tool designed for Solution Engineers and Delivery Managers to track and manage acquiring partners like Stripe, JPMorgan Chase, Adyen, and others.
+**Win Top MoR PM Tool** is a comprehensive CRM-style project management platform designed for Solution Engineers and Delivery Managers. Its primary goal is to track and manage relationships and operational details for acquiring partners such as Stripe, JPMorgan Chase, Adyen, Worldpay, and others. The tool centralizes partner data, assignments, and performance metrics, supporting effective project delivery and collaboration.
 
-## Features
+## Overview
 
-- **Partner Management**: Create, edit, and track acquiring partners
-- **Team Assignment**: Assign partners to specific teams
-- **Owner Management**: Set primary and secondary owners for each partner
-- **Solution Engineer Assignment**: Assign dedicated solution engineers
-- **Search & Filtering**: Find partners by name, team, owner, or status
-- **Volume Tracking**: Track transaction volumes for each partner
-- **Status Management**: Monitor partner status (Active, Inactive, Pending)
-- **Action Tracking**: Track actions and tasks for each partner
+This is the single source of truth for Acquiring Partner status, linked materials, blockers, dependencies, and more for Klarna Network. The tool provides a framework to track an Acquiring Partner, any of its sub-PSPs or Gateways, and all its different integration paths. For example, Stripe has approximately 13 different integrations that must be tracked independently. The system must monitor the Klarna Network implementation status across these paths:
+- Is xFeature available on OCS?
+- Within OCS, is it available on payment link, checkout, etc.?
+- Outside of OCS, is it available on payment intent?
 
-## Tech Stack
+Once the Klarna Network (KN) Feature List https://docs.google.com/spreadsheets/d/1axzNFLVvnWlUWT4nmQoc__K76suAb5OcSq-qZOfyAVc/edit?gid=367178195#gid=367178195 is fully established, the tool should track which features and functionalities have been implemented by each Acquiring Partner, including timelines for when partners are expected to support each feature per integration path.
 
-- **Backend**: Node.js, Express.js, SQLite
-- **Frontend**: React, TypeScript, Tailwind CSS
-- **Icons**: Lucide React
+### Internal Use Cases for the Win Top MoR PM Tool
+The feature list is used by the Win Top MoR group—including solutions & delivery, commercial resources, and KN Leadership—to align on:
+- What features are available for our partners and when
+- Which integration patterns are supported (Server-side, Web SDK, Mobile SDK) per acquiring partner
+- Status of acquiring partner implementations and phase details
+- Risks, blockers, or dependencies for Acquiring Partner go-live
+- Central hub for project overviews, technical details, timelines, resource allocation, risks, dependencies, notes, and documentation links
 
-## Quick Start
+Beyond project management, this list also underpins:
+- Capacity planning for technical resources
+- Integration health and readiness
 
-### Prerequisites
+---
 
-- Node.js (v14 or higher)
-- npm or yarn
+## Key Features
 
-### Backend Setup
+- **Partner Management:** Create, edit, and track acquiring partners (APs), including overarching APs (e.g., Nexi Relay, Nomupay).
+- **Sub-Entity Tracking:** Manage sub-PSPs and gateways under each AP, treating them as related sub-projects. Each sub-entity can have its own integration work, milestones, and status.
+- **Team Assignment:** Assign partners and their sub-entities to specific teams based on Leap categories (Red, Cobalt, Platinum, Black).
+- **Owner Management:** Designate primary and secondary technical points of contact for each project and sub-entity.
+- **Business Developer Assignment:** Assign responsible business developers for each project or sub-entity.
+- **Project Metadata:** Track project identifiers, names, types (multi-select), priority, start and target go-live dates, status/stage, next milestone, dependencies, risks/blockers, and resource allocation.
+- **Integration Path Tracking:** For each AP and sub-PSP/gateway, specify integration types (REST API, WebSDK, Plugin, MobileSDK, In-Store) and track which functionalities have been implemented per integration path.
+- **Testing & Health:** Monitor testing status (Not Started, In Progress, Passed, Blocked), health score, and estimated volume ($).
+- **Action & Task Management:** Log actions, tasks, and progress for each partner and sub-entity.
+- **Search & Filtering:** Find partners or sub-entities by name, team, owner, status, and other attributes.
+- **Status Management:** Track project and integration status/stage (Discovery, Scoping, Development, Testing, IQR, CLR, Launch, Live, Paused).
+- **Linked Documentation:** Attach notes, comments, and hyperlinks to relevant docs for each project and sub-entity.
+- **Audit & Updates:** Record the last updated date and maintain a clear change log.
+- **Database:** The database is not yet created outside of this README and a few other Google Sheets.
+- **Datamodel:** Research and document the current and planned data model within this file.
+- **UX-Klarna-View:** The initial UX should focus on a “Win Top MoR Account Management” view; this is the first priority before expanding further.
+- **UX-Klarna-View:** Implement a project management style view, listing acquiring partner accounts from a high level, with deep-dive overlays showing details. Detail overlays should have tabs for different information layers.
 
-1. Navigate to the server directory:
-   ```bash
-   cd server
-   ```
+---
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+## Data Model Design
 
-3. Initialize the database with sample data:
-   ```bash
-   npm run init-db
-   ```
+Entities and fields to support the schema and requirements:
 
-4. Start the backend server:
-   ```bash
-   npm start
-   ```
+- **Project (Acquiring Partner):**
+  - `project_id` (e.g. KN-0001)
+  - `project_name`
+  - `account_name`
+  - `project_type` (multi-select)
+  - `status_stage`
+  - `priority`
+  - `start_date`
+  - `target_go_live_date`
+  - `owning_team`
+  - `primary_technical_poc`
+  - `secondary_technical_poc`
+  - `business_developer`
+  - `next_milestone`
+  - `dependencies`
+  - `risks_blockers`
+  - `resource_allocation`
+  - `estimated_volume`
+  - `health_score`
+  - `last_updated`
+  - `notes_comments`
+  - `linked_docs`
+  - **Relationships:** Has many Sub-Entities
 
-   The backend will run on `http://localhost:5000`
+- **Sub-Entity (Sub-PSP/Gateway):**
+  - `sub_entity_id`
+  - `parent_project_id`
+  - `name`
+  - `integration_type` (multi-select)
+  - `testing_status`
+  - `status_stage`
+  - `milestones`
+  - `implemented_functionalities` (list per integration path)
+  - `owners` (primary/secondary)
+  - `business_developer`
+  - `notes_comments`
+  - `linked_docs`
+  - **Relationships:** Belongs to Project
 
-### Frontend Setup
+- **User:**
+  - `user_id`
+  - `name`
+  - `role` (e.g. Solution Engineer, Business Developer, Delivery Manager)
+  - **Relationships:** Can be assigned to Projects/Sub-Entities
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd client/frontend
-   ```
+- **Team:**
+  - `team_id`
+  - `name`
+  - `leap_category`
+  - **Relationships:** Owns Projects/Sub-Entities
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+- **Action/Task:**
+  - `task_id`
+  - `project_id` or `sub_entity_id`
+  - `description`
+  - `status`
+  - `assignee`
+  - `due_date`
 
-3. Start the development server:
-   ```bash
-   npm start
-   ```
+---
 
-   The frontend will run on `http://localhost:3000`
+## 🔗 References
+- Current Project Tracker Example: [Nomupay example](https://docs.google.com/spreadsheets/d/17TSp8-MpJ4CQrGi7IoOerwuxsWmHefDY8HBBDQoYOFo/edit?gid=1186085164#gid=1186085164)
+- Current AP Timelines Tracker: AP Timelines tab https://docs.google.com/spreadsheets/d/1axzNFLVvnWlUWT4nmQoc__K76suAb5OcSq-qZOfyAVc/edit?gid=367178195#gid=367178195
+- Design System: Klarna Bubble UI — Keep and follow UX principles
+- API Endpoint: pinkbase-proxy-eu.production.c2c.klarna.net — Data model is here (continue to use)
 
-## Sample Data
+**Integration Path Tracking:**  
+For each acquiring partner and its sub-entities, maintain a record of integration paths (REST API, WebSDK, etc.) and functionalities completed per path. This allows clear visibility for both overarching partners and their associated sub-projects.
 
-The application comes pre-loaded with sample data including:
+---
 
-- **Teams**: North America Team, Europe Team, Asia Pacific Team
-- **Users**: Dexter Vosper (Primary Owner), David Summersbee (Secondary Owner), Carin Baker (Solution Engineer)
-- **Partners**: Stripe, JPMorgan Chase, Adyen
-- **Actions**: Sample tasks and activities for each partner
-
-## API Endpoints
-
-### Partners
-- `GET /api/partners` - Get all partners
-- `GET /api/partners/:id` - Get partner by ID
-- `POST /api/partners` - Create new partner
-- `PUT /api/partners/:id` - Update partner
-- `DELETE /api/partners/:id` - Delete partner
-- `GET /api/partners/search` - Search partners with filters
-
-### Teams
-- `GET /api/teams` - Get all teams
-- `POST /api/teams` - Create new team
-
-### Users
-- `GET /api/users` - Get all users
-- `POST /api/users` - Create new user
-
-### Actions
-- `GET /api/partners/:partnerId/actions` - Get actions for a partner
-- `POST /api/partners/:partnerId/actions` - Create action for a partner
-
-## Usage
-
-1. **View Partners**: The main dashboard shows all acquiring partners in a card-based layout
-2. **Add Partner**: Click the "Add Partner" button to create a new partner
-3. **Edit Partner**: Click the menu icon on any partner card to edit
-4. **Search**: Use the search bar to find partners by name or description
-5. **Filter**: Use the filter dropdowns to filter by team, owner, or status
-6. **View Details**: Click "View Details" on any partner card (placeholder for future implementation)
-
-## Database Schema
-
-The application uses SQLite with the following main tables:
-
-- **teams**: Stores team information
-- **users**: Stores user information with roles
-- **acquiring_partners**: Stores partner information with relationships
-- **actions**: Stores action items for each partner
-
-## Development
-
-### Backend Development
-- Use `npm run dev` for development with auto-restart
-- Database file: `server/database.sqlite`
-- API documentation available at `/api` endpoints
-
-### Frontend Development
-- Hot reloading enabled in development mode
-- TypeScript for type safety
-- Tailwind CSS for styling
-- Responsive design for mobile and desktop
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file for details
+_Refer back to this prompt to keep your implementation aligned with the evolving requirements and schema._
