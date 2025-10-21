@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Plus } from 'lucide-react';
-import { AcquiringPartner, Team, User } from '../types';
+import { AcquiringPartner, Team, User, Status, LifecycleStage, Priority, VolumeBand, PortfolioTag, Confidence } from '../types';
 
 interface PartnerFormProps {
   partner?: AcquiringPartner;
@@ -13,22 +13,28 @@ interface PartnerFormProps {
 const PartnerForm: React.FC<PartnerFormProps> = ({ partner, teams, users, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    volume: '',
-    status: 'Active',
+    status: 'Active' as Status,
+    lifecycle_stage: 'Not Started' as LifecycleStage,
+    priority: 'Medium' as Priority,
+    estimated_volume_band: '',
+    estimated_volume_value: '',
+    portfolio_tag: '',
+    go_live_date: '',
+    go_live_confidence: '',
+    health_score: '',
+    days_to_go_live: '',
+    project_duration_days: '',
+    commercial_owner_id: '',
     primary_owner_id: '',
     secondary_owner_id: '',
-    commercial_owner_id: '',
+    solution_engineer_id: '',
     primary_sd_owner_id: '',
     secondary_sd_owner_id: '',
-    team_id: '',
-    technical_status: '',
-    specs_version: '',
-    contract_status: '',
-    pricing_tier: '',
-    volume_2025: '',
-    volume_2026: '',
-    go_live_date: '',
+    owning_team_id: '',
+    parent_partner_id: '',
+    notes: '',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   });
 
   const [showAddPerson, setShowAddPerson] = useState({
@@ -104,29 +110,56 @@ const PartnerForm: React.FC<PartnerFormProps> = ({ partner, teams, users, onSave
     if (partner) {
       setFormData({
         name: partner.name,
-        description: partner.description || '',
-        volume: partner.volume || '',
         status: partner.status,
+        lifecycle_stage: partner.lifecycle_stage,
+        priority: partner.priority,
+        estimated_volume_band: partner.estimated_volume_band || '',
+        estimated_volume_value: partner.estimated_volume_value?.toString() || '',
+        portfolio_tag: partner.portfolio_tag || '',
+        go_live_date: partner.go_live_date || '',
+        go_live_confidence: partner.go_live_confidence || '',
+        health_score: partner.health_score?.toString() || '',
+        days_to_go_live: partner.days_to_go_live?.toString() || '',
+        project_duration_days: partner.project_duration_days?.toString() || '',
+        commercial_owner_id: partner.commercial_owner_id || '',
         primary_owner_id: partner.primary_owner_id || '',
         secondary_owner_id: partner.secondary_owner_id || '',
-        commercial_owner_id: partner.commercial_owner_id || '',
+        solution_engineer_id: partner.solution_engineer_id || '',
         primary_sd_owner_id: partner.primary_sd_owner_id || '',
         secondary_sd_owner_id: partner.secondary_sd_owner_id || '',
-        team_id: partner.team_id || '',
-        technical_status: partner.technical_status || '',
-        specs_version: partner.specs_version || '',
-        contract_status: partner.contract_status || '',
-        pricing_tier: partner.pricing_tier || '',
-        volume_2025: partner.volume_2025 || '',
-        volume_2026: partner.volume_2026 || '',
-        go_live_date: partner.go_live_date || '',
+        owning_team_id: partner.owning_team_id || '',
+        parent_partner_id: partner.parent_partner_id || '',
+        notes: partner.notes || '',
+        created_at: partner.created_at,
+        updated_at: partner.updated_at
       });
     }
   }, [partner]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    const partnerData = {
+      ...formData,
+      estimated_volume_value: formData.estimated_volume_value ? parseInt(formData.estimated_volume_value) : undefined,
+      health_score: formData.health_score ? parseInt(formData.health_score) : undefined,
+      days_to_go_live: formData.days_to_go_live ? parseInt(formData.days_to_go_live) : undefined,
+      project_duration_days: formData.project_duration_days ? parseInt(formData.project_duration_days) : undefined,
+      go_live_date: formData.go_live_date || undefined,
+      estimated_volume_band: (formData.estimated_volume_band as VolumeBand) || undefined,
+      portfolio_tag: (formData.portfolio_tag as PortfolioTag) || undefined,
+      go_live_confidence: (formData.go_live_confidence as Confidence) || undefined,
+      commercial_owner_id: formData.commercial_owner_id || undefined,
+      primary_owner_id: formData.primary_owner_id || undefined,
+      secondary_owner_id: formData.secondary_owner_id || undefined,
+      solution_engineer_id: formData.solution_engineer_id || undefined,
+      primary_sd_owner_id: formData.primary_sd_owner_id || undefined,
+      secondary_sd_owner_id: formData.secondary_sd_owner_id || undefined,
+      owning_team_id: formData.owning_team_id || undefined,
+      parent_partner_id: formData.parent_partner_id || undefined,
+      notes: formData.notes || undefined,
+      last_updated_at: new Date().toISOString()
+    };
+    onSave(partnerData);
   };
 
   const handleChange = (field: string, value: string) => {
@@ -252,16 +285,16 @@ const PartnerForm: React.FC<PartnerFormProps> = ({ partner, teams, users, onSave
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {renderEditableInput('Partner Name *', 'name', 'e.g., Stripe')}
-              {renderEditableInput('Volume', 'volume', 'e.g., $200B+')}
+              {renderEditableInput('Estimated Volume', 'estimated_volume_band', 'e.g., High')}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
+                Notes
               </label>
               <textarea
-                value={formData.description}
-                onChange={(e) => handleChange('description', e.target.value)}
+                value={formData.notes}
+                onChange={(e) => handleChange('notes', e.target.value)}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Brief description of the partner..."
@@ -274,8 +307,8 @@ const PartnerForm: React.FC<PartnerFormProps> = ({ partner, teams, users, onSave
                 Owning Team
               </label>
               <select
-                value={formData.team_id}
-                onChange={(e) => handleChange('team_id', e.target.value)}
+                value={formData.owning_team_id}
+                onChange={(e) => handleChange('owning_team_id', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="">Select a team</option>
@@ -291,10 +324,10 @@ const PartnerForm: React.FC<PartnerFormProps> = ({ partner, teams, users, onSave
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-gray-900">Technical Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {renderEditableDropdown('Technical Status', 'technical_status', technicalStatusOptions, 'Select technical status')}
-                {renderEditableInput('Specs Version', 'specs_version', 'e.g., V2R8')}
-                {renderEditableDropdown('Contract Status', 'contract_status', contractStatusOptions, 'Select contract status')}
-                {renderEditableDropdown('Pricing Tier', 'pricing_tier', pricingTierOptions, 'Select pricing tier')}
+                {renderEditableDropdown('Lifecycle Stage', 'lifecycle_stage', ['Not Started', 'Scoping', 'In Development', 'Launched', 'Blocked'], 'Select lifecycle stage')}
+                {renderEditableDropdown('Priority', 'priority', ['Low', 'Medium', 'High', 'Critical'], 'Select priority')}
+                {renderEditableDropdown('Portfolio Tag', 'portfolio_tag', ['Win Top MoR Black', 'Win Top MoR Cobalt', 'Win Top MoR Platinum', 'Win Top MoR Red'], 'Select portfolio tag')}
+                {renderEditableDropdown('Go Live Confidence', 'go_live_confidence', ['Low', 'Medium', 'High'], 'Select confidence')}
               </div>
             </div>
 
@@ -302,15 +335,18 @@ const PartnerForm: React.FC<PartnerFormProps> = ({ partner, teams, users, onSave
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-gray-900">Volume Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {renderEditableInput('Volume 2025', 'volume_2025', 'e.g., 10.9B')}
-                {renderEditableInput('Volume 2026', 'volume_2026', 'e.g., 42B')}
+                {renderEditableDropdown('Volume Band', 'estimated_volume_band', ['Low', 'Medium', 'High'], 'Select volume band')}
+                {renderEditableInput('Volume Value', 'estimated_volume_value', 'e.g., 200000000000')}
               </div>
             </div>
 
             {/* Timeline */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-gray-900">Timeline</h3>
-              {renderEditableInput('Go Live Date', 'go_live_date', 'e.g., January 31, 2026')}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {renderEditableInput('Go Live Date', 'go_live_date', 'e.g., 2026-01-31', 'date')}
+                {renderEditableInput('Health Score', 'health_score', 'e.g., 85', 'number')}
+              </div>
             </div>
 
             {/* Owners */}
